@@ -1260,6 +1260,46 @@ class TestLoopScheduler(object):
         assert all(trees[0][0] is i[0] for i in trees)
 
 
+class TestsForCoreAndYask(object):
+    """Tests which ought to pass in both core and yask."""
+
+    def test_misc_dim(self):
+        grid = Grid(shape=(10, 10))
+        x, y = grid.dimensions
+        time = grid.time_dim
+
+        u = TimeFunction(name='u', grid=grid, time_order=1, space_order=4, save=4)
+
+        dx = Dimension(name='dx')
+        c = Function(name='c', dimensions=(x, dx), shape=(10, 5))
+
+        step = Eq(u.forward, (
+            u[time, x-2, y] * c[x, 0]
+            + u[time, x-1, y] * c[x, 1]
+            + u[time, x, y] * c[x, 2]
+            + u[time, x+1, y] * c[x, 3]
+            + u[time, x+2, y] * c[x, 4]))
+
+        for i in range(10):
+            c.data[i, 0] = 1.0+i
+            c.data[i, 1] = 1.0+i
+            c.data[i, 2] = 3.0+i
+            c.data[i, 3] = 6.0+i
+            c.data[i, 4] = 5.0+i
+
+        u.data[:] = 0.0
+        u.data[0, 2, :] = 2.0
+
+        Operator(step).apply(time_m=0, time_M=0)
+
+        assert(np.all(u.data[1, 0, :] == 10.0))
+        assert(np.all(u.data[1, 1, :] == 14.0))
+        assert(np.all(u.data[1, 2, :] == 10.0))
+        assert(np.all(u.data[1, 3, :] == 8.0))
+        assert(np.all(u.data[1, 4, :] == 10.0))
+        assert(np.all(u.data[1, 5:10, :] == 0.0))
+
+
 @skipif_yask
 @pytest.mark.xfail
 @pytest.mark.skipif(configuration['backend'] != 'foreign',
