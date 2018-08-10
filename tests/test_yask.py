@@ -417,6 +417,7 @@ class TestOperatorAdvanced(object):
 
         eqns = [Eq(u.forward, u + 1.), Eq(usave, u)]
         op = Operator(eqns)
+        print(op)
         op.apply(time=nt-1)
 
 
