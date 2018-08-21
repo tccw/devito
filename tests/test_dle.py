@@ -205,7 +205,7 @@ void f_0(float *restrict a_vec, float *restrict b_vec,"""
   float (*restrict b) __attribute__((aligned(64))) = (float (*)) b_vec;
   for (int s = s_start; s <= s_finish; s += 1)
   {
-    b[i] = a[i] + pow(b[i], 2) + 3;
+    b[i] = a[i] + (b[i]*b[i]) + 3;
   }
 }
 void f_1(float *restrict a_vec, float *restrict b_vec,"""

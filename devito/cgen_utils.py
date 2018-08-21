@@ -180,7 +180,7 @@ class CodePrinter(C99CodePrinter):
         return "&%s" % expr.name
 
     def _print_Pow(self, expr):
-        return '(' + pow_to_mul(expr).__str__() + ')'
+        return '(' + self._print(pow_to_mul(expr)) + ')'
 
 
 def ccode(expr, dtype=np.float32, **settings):
