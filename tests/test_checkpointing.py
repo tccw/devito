@@ -157,6 +157,8 @@ def test_acoustic_save_and_nosave(shape=(50, 50), spacing=(15.0, 15.0), tn=500.,
     """ Run the acoustic example with and without save=True. Make sure the result is the
     same
     """
+    from devito import configuration
+    configuration["log_level"] = 'INFO'
     solver = acoustic_setup(shape=shape, spacing=spacing, nbpml=nbpml, tn=tn,
                             space_order=space_order, time_order=time_order)
     rec, u, summary = solver.forward(save=True)

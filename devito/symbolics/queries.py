@@ -1,4 +1,4 @@
-from sympy import diff, nan, Eq
+from sympy import diff, nan, Eq, cos, sin
 
 from devito.dimension import Dimension
 from devito.tools import as_tuple
@@ -43,7 +43,6 @@ def q_terminal(expr):
 
 
 def q_trigonometry(expr):
-    from devito.finite_differences.differentiable import cos, sin
     return expr.is_Function and expr.func in [sin, cos]
 
 

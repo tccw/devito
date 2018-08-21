@@ -32,7 +32,7 @@ class Differentiable(FrozenExpr):
         if isinstance(expr, Differentiable):
             self.fd = expr.fd
         else:
-            self.fd = generate_fd_functions(self)
+            self.fd = kwargs.get('fd', generate_fd_functions(self))
 
         for d in self.fd:
             setattr(self.__class__, d[1], property(d[0], d[1]))
@@ -40,47 +40,53 @@ class Differentiable(FrozenExpr):
 
     def __add__(self, other):
         if isinstance(other, Differentiable):
-            return Differentiable(sympy.Add(*[self.expr, other.expr]))
+            return Differentiable(sympy.Add(*[self.expr, other.expr]), fd=self.fd)
         else:
-            return Differentiable(sympy.Add(*[self.expr, other]))
+            return Differentiable(sympy.Add(*[self.expr, other]), fd=self.fd)
 
     __iadd__ = __add__
     __radd__ = __add__
 
     def __sub__(self, other):
         if isinstance(other, Differentiable):
-            return Differentiable(sympy.Add(*[self.expr, -other.expr]))
+            return Differentiable(sympy.Add(*[self.expr, -other.expr]), fd=self.fd)
         else:
-            return Differentiable(sympy.Add(*[self.expr, -other]))
+            return Differentiable(sympy.Add(*[self.expr, -other]), fd=self.fd)
 
     def __rsub__(self, other):
         if isinstance(other, Differentiable):
-            return Differentiable(sympy.Add(*[-self.expr, other.expr]))
+            return Differentiable(sympy.Add(*[-self.expr, other.expr]), fd=self.fd)
         else:
-            return Differentiable(sympy.Add(*[-self.expr, other]))
+            return Differentiable(sympy.Add(*[-self.expr, other]), fd=self.fd)
 
     __isub__ = __sub__
 
     def __mul__(self, other):
         if isinstance(other, Differentiable):
-            return Differentiable(sympy.Mul(*[self.expr, other.expr]))
+            return Differentiable(sympy.Mul(*[self.expr, other.expr]), fd=self.fd)
         else:
-            return Differentiable(sympy.Mul(*[self.expr, other]))
+            return Differentiable(sympy.Mul(*[self.expr, other]), fd=self.fd)
 
     __imul__ = __mul__
     __rmul__ = __mul__
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Differentiable):
-            return Differentiable(self.expr/other.expr)
+            return Differentiable(self * sympy.Pow(other.expr, -1), fd=self.fd)
         else:
-            return Differentiable(self.expr/other)
+            return Differentiable(self * sympy.Pow(other, -1), fd=self.fd)
+
+    def __rtruediv__(self, other):
+        if isinstance(other, Differentiable):
+            return Differentiable(other.expr * sympy.Pow(self.expr, -1), fd=self.fd)
+        else:
+            return Differentiable(other * sympy.Pow(self.expr, -1), fd=self.fd)
 
     def __neg__(self):
-        return Differentiable(- self.expr)
+        return Differentiable(- self.expr, fd=self.fd)
 
     def __pow__(self, exponent):
-        return Differentiable(sympy.Pow(self, exponent))
+        return Differentiable(sympy.Pow(self, exponent), fd=self.fd)
 
     def __eq__(self, other):
         if isinstance(other, Differentiable):
@@ -92,7 +98,7 @@ class Differentiable(FrozenExpr):
         return not self.__eq__(other)
 
     def func(self, *args, **kwargs):
-        return Differentiable(self.expr.func(*args), **kwargs)
+        return Differentiable(self.expr.func(*args), fd=self.fd, **kwargs)
 
     def __str__(self):
         return self.expr.__str__()
@@ -155,7 +161,13 @@ class Differentiable(FrozenExpr):
         """
         Staggered grid setup
         """
-        return tuple([None] * len(self.indices))
+        func = list(retrieve_functions(self.expr))
+        func = [f for f in func if hasattr(f, 'staggered')]
+        if any(s is None for f in func for s in f.staggered):
+            staggered = tuple([None] * len(self.indices))
+        else:
+            staggered = tuple([0] * len(self.indices))
+        return staggered
 
     def evalf(self, N=None):
         N = N or sympy.N(sympy.Float(1.0))

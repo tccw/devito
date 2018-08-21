@@ -20,6 +20,7 @@ def second_order_stencil(model, u, v, H0, Hz):
     stencilr = 1.0 / (2.0 * m + s * damp) * \
         (4.0 * m * v + (s * damp - 2.0 * m) *
          v.backward + 2.0 * s ** 2 * (delta * H0 + Hz))
+
     first_stencil = Eq(u.forward, stencilp)
     second_stencil = Eq(v.forward, stencilr)
     stencils = [first_stencil, second_stencil]

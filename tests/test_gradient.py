@@ -69,7 +69,8 @@ class TestGradient(object):
     @pytest.mark.parametrize('kernel', ['OT2'])
     @pytest.mark.parametrize('shape', [(70, 80)])
     @pytest.mark.parametrize('checkpointing', [True, False])
-    def test_gradientFWI(self, shape, kernel, space_order, checkpointing):
+    @pytest.mark.parametrize('born_u0', [True, False])
+    def test_gradientFWI(self, shape, kernel, space_order, checkpointing, born_u0):
         """
         This test ensures that the FWI gradient computed with devito
         satisfies the Taylor expansion property:
@@ -97,22 +98,25 @@ class TestGradient(object):
 
         m0 = Function(name='m0', grid=wave.model.m.grid, space_order=space_order)
         m0.data[:] = smooth10(wave.model.m.data, wave.model.m.shape_domain)
-        dm = np.float32(wave.model.m.data - m0.data)
+        dm = wave.model.m.data - m0.data
+
+        if born_u0:
+            residual1, u01, _, _ = wave.born(dm, save=born_u0, m=m0)
 
         # Compute receiver data for the true velocity
         rec, u, _ = wave.forward()
 
         # Compute receiver data and full wavefield for the smooth velocity
-        rec0, u0, _ = wave.forward(m=m0, save=True)
-
-        # Objective function value
-        F0 = .5*linalg.norm(rec0.data - rec.data)**2
-
-        # Gradient: <J^T \delta d, dm>
+        rec0, u0, _ = wave.forward(m=m0, save=not born_u0)
         residual = Receiver(name='rec', grid=wave.model.grid, data=rec0.data - rec.data,
                             time_range=rec.time_range, coordinates=rec0.coordinates.data)
 
-        gradient, _ = wave.gradient(residual, u0, m=m0, checkpointing=checkpointing)
+        # Objective function value
+        F0 = .5*linalg.norm(residual.data)**2
+
+        # Gradient: <J^T \delta d, dm>
+        gradient, _ = wave.gradient(residual, u01 if born_u0 else u0,
+                                    m=m0, checkpointing=checkpointing)
         G = np.dot(gradient.data.reshape(-1), dm.reshape(-1))
 
         # FWI Gradient test

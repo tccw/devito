@@ -3,6 +3,7 @@ from itertools import islice
 
 from cached_property import cached_property
 
+from devito.types import Indexed, IndexedData
 from devito.dimension import Dimension
 from devito.symbolics import (Eq, as_symbol, retrieve_indexed, retrieve_terminals,
                               convert_to_SSA, q_inc, q_indirect, q_timedimension)
@@ -207,7 +208,11 @@ class FlowGraph(OrderedDict):
                 elif isinstance(i, Dimension):
                     # Go on with the search, as /i/ is not a time dimension
                     pass
-                elif not i.base.function.is_TensorFunction:
+                elif isinstance(i, Indexed) and i.base.function.is_TensorFunction:
+                    # It didn't come from the outside and it's not in self, so
+                    # cannot determine if time-invariant; assume time-varying
+                    return False
+                elif isinstance(i, IndexedData) and i.function.is_TensorFunction:
                     # It didn't come from the outside and it's not in self, so
                     # cannot determine if time-invariant; assume time-varying
                     return False

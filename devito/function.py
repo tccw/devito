@@ -488,11 +488,17 @@ class TensorFunction(AbstractCachedFunction):
     __imul__ = __mul__
     __rmul__ = __mul__
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Differentiable):
-            return Differentiable(self/other.expr)
+            return Differentiable(self * sympy.Pow(other.expr, -1))
         else:
-            return Differentiable(self/other)
+            return Differentiable(self * sympy.Pow(other, -1))
+
+    def __rtruediv__(self, other):
+        if isinstance(other, Differentiable):
+            return Differentiable(other.expr * sympy.Pow(self, -1))
+        else:
+            return Differentiable(other * sympy.Pow(self, -1))
 
     def __pow__(self, exponent):
         return Differentiable(sympy.Pow(self, exponent))

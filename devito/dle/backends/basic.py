@@ -49,6 +49,7 @@ class BasicRewriter(AbstractRewriter):
             if not tagged:
                 continue
             root = tagged[0]
+
             if not root.is_Elementizable:
                 continue
             target = tree[tree.index(root):]
@@ -99,7 +100,6 @@ class BasicRewriter(AbstractRewriter):
 
             call, params = zip(*args)
             name = "f_%d" % root.tag
-
             # Produce the new Call
             mapper[root] = List(header=noinline, body=Call(name, call))
 
@@ -109,7 +109,6 @@ class BasicRewriter(AbstractRewriter):
 
         # Transform the main tree
         processed = Transformer(mapper).visit(nodes)
-
         return processed, {'elemental_functions': functions.values()}
 
     def _compiler_decoration(self, name, default=None):

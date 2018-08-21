@@ -89,6 +89,6 @@ def solve(eq, target, **kwargs):
     if isinstance(eq, Eq):
         eq = eq.lhs - eq.rhs
     if isinstance(eq, Differentiable):
-        return Differentiable(sympy.solve(eq.expr, target, **kwargs)[0])
+        return sympy.solve(eq.expr, target, **kwargs)[0]
     else:
         return sympy.solve(eq, target, **kwargs)[0]

@@ -205,7 +205,7 @@ def first_derivative(expr, **kwargs):
     for i in range(0, len(ind)):
             subs = dict([(d, ind[i].subs({dim: d})) for d in all_dims])
             deriv += expr.subs(subs) * c[i]
-    return Differentiable(deriv.evalf(_PRECISION))
+    return Differentiable(matvec._transpose*deriv.evalf(_PRECISION))
 
 
 def generic_derivative(expr, deriv_order, dim, fd_order, **kwargs):
@@ -316,7 +316,7 @@ def generate_fd_functions(function):
     dimensions = function.indices
     space_fd_order = function.space_order
     time_fd_order = function.time_order if function.is_TimeFunction else 0
-    is_staggered = not any(s is None for s in function.staggered)
+    is_staggered = any(s is not None for s in function.staggered)
     deriv_function = staggered_diff if is_staggered else generic_derivative
     c_deriv_function = staggered_cross_diff if is_staggered else generic_cross_derivative
 
@@ -365,19 +365,29 @@ def generate_fd_functions(function):
     # add non-conventional, non-centered first-order FDs
     if not is_staggered:
         for d in dimensions:
+            name = 't' if d.is_Time else d.root.name
+            o = time_fd_order if d.is_Time else space_fd_order
             # left
-            deriv = partial(first_derivative, order=space_fd_order,
+            deriv = partial(first_derivative, order=o,
                             dim=d, side=left)
             name_fd = 'd%sl' % name
             desciption = 'left first order derivative w.r.t dimension %s' % d
             derivatives += ((deriv, name_fd, desciption), )
             # right
-            deriv = partial(first_derivative, order=space_fd_order,
+            deriv = partial(first_derivative, order=o,
                             dim=d, side=right)
             name_fd = 'd%sr' % name
             desciption = 'left first order derivative w.r.t dimension %s' % d
             derivatives += ((deriv, name_fd, desciption), )
-
+    else:
+        for d in dimensions:
+            name = 't' if d.is_Time else d.root.name
+            o = time_fd_order if d.is_Time else space_fd_order
+            deriv = partial(staggered_diff, fd_order=o,
+                            deriv_order=1, dim=d, stagger=centered)
+            name_fd = 'd%sc' % name
+            desciption = 'centered first order derivative w.r.t dimension %s' % d
+            derivatives += ((deriv, name_fd, desciption), )
     return derivatives
 
 
