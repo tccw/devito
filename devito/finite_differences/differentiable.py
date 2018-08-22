@@ -124,9 +124,9 @@ class Differentiable(FrozenExpr):
 
     def __eq__(self, other):
         if isinstance(other, Differentiable):
-            return self.expr == other.expr
+            return sympy.simplify(self.expr) == other.expr
         else:
-            return self.expr == other
+            return sympy.simplify(self.expr) == other
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -141,7 +141,7 @@ class Differentiable(FrozenExpr):
 
     @property
     def args(self):
-        return self.expr.args
+        return self.expr.func(*self.expr.args).args
 
     @property
     def is_TimeFunction(self):
