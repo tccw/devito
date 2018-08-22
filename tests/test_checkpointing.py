@@ -162,7 +162,7 @@ def test_acoustic_save_and_nosave(shape=(50, 50), spacing=(15.0, 15.0), tn=500.,
     solver = acoustic_setup(shape=shape, spacing=spacing, nbpml=nbpml, tn=tn,
                             space_order=space_order, time_order=time_order)
     rec, u, summary = solver.forward(save=True)
-    last_time_step = solver.source.nt-1
+    last_time_step = solver.op_fwd().arguments()['time_M'] + 1
     field_last_time_step = np.copy(u.data[last_time_step, :, :])
     rec_bk = np.copy(rec.data)
     rec, u, summary = solver.forward(save=False)

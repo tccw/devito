@@ -12,6 +12,8 @@ def second_order_stencil(model, u, v, H0, Hz):
     v.dt2 =  (delta * H0 + Hz) - damp * v.dt
     """
     # Stencils
+    import time
+    t0 = time.time()
     m, damp, delta, epsilon = model.m, model.damp, model.delta, model.epsilon
     s = model.grid.stepping_dim.spacing
     stencilp = 1.0 / (2.0 * m + s * damp) * \
@@ -20,7 +22,7 @@ def second_order_stencil(model, u, v, H0, Hz):
     stencilr = 1.0 / (2.0 * m + s * damp) * \
         (4.0 * m * v + (s * damp - 2.0 * m) *
          v.backward + 2.0 * s ** 2 * (delta * H0 + Hz))
-
+    print(time.time() - t0)
     first_stencil = Eq(u.forward, stencilp)
     second_stencil = Eq(v.forward, stencilr)
     stencils = [first_stencil, second_stencil]
@@ -42,6 +44,12 @@ def Gxx_shifted(field, costheta, sintheta, cosphi, sinphi, space_order):
     x, y, z = field.space_dimensions
     Gx1 = (costheta * cosphi * field.dx + costheta * sinphi * field.dyr -
            sintheta * field.dzr)
+    (first_derivative(Gx1 * costheta * cosphi,
+                             dim=x, side=centered, order=space_order,
+                             matvec=transpose) +
+            first_derivative(Gx1 * costheta * sinphi,
+                             dim=y, side=right, order=space_order,
+                             matvec=transpose))
     Gxx1 = (first_derivative(Gx1 * costheta * cosphi,
                              dim=x, side=centered, order=space_order,
                              matvec=transpose) +

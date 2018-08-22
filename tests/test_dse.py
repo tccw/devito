@@ -6,6 +6,7 @@ import pytest
 from conftest import x, y, z, skipif_yask  # noqa
 
 from devito import Eq, Constant, Function, TimeFunction, SparseFunction, Grid, Operator  # noqa
+from devito import clear_cache
 from devito.ir import Stencil, FlowGraph, retrieve_iteration_tree
 from devito.dse import common_subexprs_elimination, collect
 from devito.symbolics import (xreplace_constrained, iq_timeinvariant, iq_timevarying,
@@ -93,51 +94,60 @@ def tti_operator(dse=False, space_order=4):
                                  space_order=space_order, dse=dse)
 
 
-@pytest.fixture(scope="session")
-def tti_nodse():
-    operator = tti_operator(dse=None)
-    rec, u, v, _ = operator.forward()
-    return v, rec
+class Test_tti_dse(object):
+    """
+    Class for TTI test with DSE
+    The reference with no dse is only computed once
+    """
+    @classmethod
+    def setup_class(cls):
+        operator = tti_operator(dse=None)
+        rec, u, v, _ = operator.forward()
+        cls.v = v
+        cls.rec = rec
+
+    @classmethod
+    def teardown_class(cls):
+        """ teardown any state that was previously setup with a call to
+        setup_class.
+        """
+        clear_cache()
+
+    @skipif_yask
+    def test_tti_rewrite_basic(self):
+        operator = tti_operator(dse='basic')
+        rec, u, v, _ = operator.forward()
+
+        assert np.allclose(self.v.data, v.data, atol=10e-3)
+        assert np.allclose(self.rec.data, rec.data, atol=10e-3)
+
+    @skipif_yask
+    def test_tti_rewrite_advanced(self):
+        operator = tti_operator(dse='advanced')
+        rec, u, v, _ = operator.forward()
+
+        assert np.allclose(self.v.data, v.data, atol=10e-1)
+        assert np.allclose(self.rec.data, rec.data, atol=10e-1)
+
+    @skipif_yask
+    def test_tti_rewrite_speculative(self):
+        operator = tti_operator(dse='speculative')
+        rec, u, v, _ = operator.forward()
+
+        assert np.allclose(self.v.data, v.data, atol=10e-1)
+        assert np.allclose(self.rec.data, rec.data, atol=10e-1)
+
+    @skipif_yask
+    def test_tti_rewrite_aggressive(self):
+        operator = tti_operator(dse='aggressive')
+        rec, u, v, _ = operator.forward()
+
+        assert np.allclose(self.v.data, v.data, atol=10e-1)
+        assert np.allclose(self.rec.data, rec.data, atol=10e-1)
 
 
 @skipif_yask
-def test_tti_rewrite_basic(tti_nodse):
-    operator = tti_operator(dse='basic')
-    rec, u, v, _ = operator.forward()
-
-    assert np.allclose(tti_nodse[0].data, v.data, atol=10e-3)
-    assert np.allclose(tti_nodse[1].data, rec.data, atol=10e-3)
-
-
-@skipif_yask
-def test_tti_rewrite_advanced(tti_nodse):
-    operator = tti_operator(dse='advanced')
-    rec, u, v, _ = operator.forward()
-
-    assert np.allclose(tti_nodse[0].data, v.data, atol=10e-1)
-    assert np.allclose(tti_nodse[1].data, rec.data, atol=10e-1)
-
-
-@skipif_yask
-def test_tti_rewrite_speculative(tti_nodse):
-    operator = tti_operator(dse='speculative')
-    rec, u, v, _ = operator.forward()
-
-    assert np.allclose(tti_nodse[0].data, v.data, atol=10e-1)
-    assert np.allclose(tti_nodse[1].data, rec.data, atol=10e-1)
-
-
-@skipif_yask
-def test_tti_rewrite_aggressive(tti_nodse):
-    operator = tti_operator(dse='aggressive')
-    rec, u, v, _ = operator.forward()
-
-    assert np.allclose(tti_nodse[0].data, v.data, atol=10e-1)
-    assert np.allclose(tti_nodse[1].data, rec.data, atol=10e-1)
-
-
-@skipif_yask
-@pytest.mark.parametrize('kernel,space_order,expected', [
+@pytest.mark.parametrize('kernel, space_order, expected', [
     ('shifted', 8, 355), ('shifted', 16, 622),
     ('centered', 8, 168), ('centered', 16, 300)
 ])

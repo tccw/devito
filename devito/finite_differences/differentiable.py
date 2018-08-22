@@ -22,16 +22,21 @@ class Differentiable(FrozenExpr):
     def __init__(self, expr, **kwargs):
         from devito.finite_differences.finite_difference import generate_fd_functions
         self.expr = expr.expr if isinstance(expr, Differentiable) else expr
-        # Recover the list of possible FD shortcuts
-        self.dtype = self._dtype()
-        self.space_order = self._space_order()
-        self.time_order = self._space_order()
         self.indices = self._indices()
-        self.staggered = self._staggered()
         # Generate FD shortcuts for expression or copy from input
         if isinstance(expr, Differentiable):
             self.fd = expr.fd
+            # Recover the list of possible FD shortcuts
+            self.dtype = expr.dtype
+            self.space_order = expr.space_order
+            self.time_order = expr.time_order
+            self.staggered = expr.staggered
         else:
+            # Recover the list of possible FD shortcuts
+            self.dtype = self._dtype()
+            self.space_order = self._space_order()
+            self.time_order = self._space_order()
+            self.staggered = self._staggered()
             self.fd = kwargs.get('fd', generate_fd_functions(self))
 
         for d in self.fd:
@@ -40,53 +45,82 @@ class Differentiable(FrozenExpr):
 
     def __add__(self, other):
         if isinstance(other, Differentiable):
-            return Differentiable(sympy.Add(*[self.expr, other.expr]), fd=self.fd)
+            return Differentiable(sympy.Add(*[self.expr, other.expr], evaluate=False),
+                                  fd=self.fd)
         else:
-            return Differentiable(sympy.Add(*[self.expr, other]), fd=self.fd)
+            return Differentiable(sympy.Add(*[self.expr, other], evaluate=False),
+                                  fd=self.fd)
 
-    __iadd__ = __add__
     __radd__ = __add__
+
+    def __iadd__(self, other):
+        if isinstance(other, Differentiable):
+            self._expr = sympy.Add(*[self.expr, other.expr], evaluate=False)
+        else:
+            self._expr = sympy.Add(*[self.expr, other], evaluate=False)
+        return self
 
     def __sub__(self, other):
         if isinstance(other, Differentiable):
-            return Differentiable(sympy.Add(*[self.expr, -other.expr]), fd=self.fd)
+            return Differentiable(sympy.Add(*[self.expr, -other.expr], evaluate=False),
+                                  fd=self.fd)
         else:
-            return Differentiable(sympy.Add(*[self.expr, -other]), fd=self.fd)
+            return Differentiable(sympy.Add(*[self.expr, -other], evaluate=False),
+                                  fd=self.fd)
 
     def __rsub__(self, other):
         if isinstance(other, Differentiable):
-            return Differentiable(sympy.Add(*[-self.expr, other.expr]), fd=self.fd)
+            return Differentiable(sympy.Add(*[-self.expr, other.expr], evaluate=False),
+                                  fd=self.fd)
         else:
-            return Differentiable(sympy.Add(*[-self.expr, other]), fd=self.fd)
+            return Differentiable(sympy.Add(*[-self.expr, other], evaluate=False),
+                                  fd=self.fd)
 
-    __isub__ = __sub__
+    def __isub__(self, other):
+        if isinstance(other, Differentiable):
+            self._expr = sympy.Add(*[self.expr, -other.expr], evaluate=False)
+        else:
+            self._expr = sympy.Add(*[self.expr, -other], evaluate=False)
+        return self
 
     def __mul__(self, other):
         if isinstance(other, Differentiable):
-            return Differentiable(sympy.Mul(*[self.expr, other.expr]), fd=self.fd)
+            return Differentiable(sympy.Mul(*[self.expr, other.expr], evaluate=False),
+                                  fd=self.fd)
         else:
-            return Differentiable(sympy.Mul(*[self.expr, other]), fd=self.fd)
+            return Differentiable(sympy.Mul(*[self.expr, other], evaluate=False),
+                                  fd=self.fd)
 
-    __imul__ = __mul__
     __rmul__ = __mul__
+
+    def __imul__(self, other):
+        if isinstance(other, Differentiable):
+            self._expr = sympy.Mul(*[self.expr, other.expr], evaluate=False)
+        else:
+            self._expr = sympy.Mul(*[self.expr, other], evaluate=False)
+        return self
 
     def __truediv__(self, other):
         if isinstance(other, Differentiable):
-            return Differentiable(self * sympy.Pow(other.expr, -1), fd=self.fd)
+            return Differentiable(self * sympy.Pow(other.expr, -1, evaluate=False),
+                                  fd=self.fd)
         else:
-            return Differentiable(self * sympy.Pow(other, -1), fd=self.fd)
+            return Differentiable(self * sympy.Pow(other, -1, evaluate=False),
+                                  fd=self.fd)
 
     def __rtruediv__(self, other):
         if isinstance(other, Differentiable):
-            return Differentiable(other.expr * sympy.Pow(self.expr, -1), fd=self.fd)
+            return Differentiable(other.expr * sympy.Pow(self.expr, -1, evaluate=False),
+                                  fd=self.fd)
         else:
-            return Differentiable(other * sympy.Pow(self.expr, -1), fd=self.fd)
+            return Differentiable(other * sympy.Pow(self.expr, -1, evaluate=False),
+                                  fd=self.fd)
 
     def __neg__(self):
         return Differentiable(- self.expr, fd=self.fd)
 
     def __pow__(self, exponent):
-        return Differentiable(sympy.Pow(self, exponent), fd=self.fd)
+        return Differentiable(sympy.Pow(self, exponent, evaluate=False), fd=self.fd)
 
     def __eq__(self, other):
         if isinstance(other, Differentiable):
@@ -98,7 +132,7 @@ class Differentiable(FrozenExpr):
         return not self.__eq__(other)
 
     def func(self, *args, **kwargs):
-        return Differentiable(self.expr.func(*args), fd=self.fd, **kwargs)
+        return Differentiable(self.expr.func(*args, **kwargs), fd=self.fd)
 
     def __str__(self):
         return self.expr.__str__()
@@ -180,7 +214,16 @@ class Differentiable(FrozenExpr):
         for k, v in subs.items():
             if isinstance(v, Differentiable):
                 subs[k] = v.expr
-        return Differentiable(self.expr.subs(subs))
+        return self.expr.subs(subs)
 
     def __hash__(self):
         return hash(self.expr)
+
+
+    @property
+    def expr(self):
+        return self._expr
+
+    @expr.setter
+    def expr(self, expr):
+        self._expr = expr

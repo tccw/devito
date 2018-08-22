@@ -458,32 +458,32 @@ class TensorFunction(AbstractCachedFunction):
 
     def __add__(self, other):
         if isinstance(other, Differentiable):
-            return Differentiable(sympy.Add(*[self, other.expr]))
+            return Differentiable(sympy.Add(*[self, other.expr], evaluate=False))
         else:
-            return Differentiable(sympy.Add(*[self, other]))
+            return Differentiable(sympy.Add(*[self, other], evaluate=False))
 
     __iadd__ = __add__
     __radd__ = __add__
 
     def __sub__(self, other):
         if isinstance(other, Differentiable):
-            return Differentiable(sympy.Add(*[self, -other.expr]))
+            return Differentiable(sympy.Add(*[self, -other.expr], evaluate=False))
         else:
-            return Differentiable(sympy.Add(*[self, -other]))
+            return Differentiable(sympy.Add(*[self, -other], evaluate=False))
 
     def __rsub__(self, other):
         if isinstance(other, Differentiable):
-            return Differentiable(sympy.Add(*[-self, other.expr]))
+            return Differentiable(sympy.Add(*[-self, other.expr], evaluate=False))
         else:
-            return Differentiable(sympy.Add(*[-self, other]))
+            return Differentiable(sympy.Add(*[-self, other], evaluate=False))
 
     __isub__ = __sub__
 
     def __mul__(self, other):
         if isinstance(other, Differentiable):
-            return Differentiable(sympy.Mul(*[self, other.expr]))
+            return Differentiable(sympy.Mul(*[self, other.expr], evaluate=False))
         else:
-            return Differentiable(sympy.Mul(*[self, other]))
+            return Differentiable(sympy.Mul(*[self, other], evaluate=False))
 
     __imul__ = __mul__
     __rmul__ = __mul__

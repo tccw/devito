@@ -97,7 +97,7 @@ def second_derivative(expr, **kwargs):
     for i in range(0, len(ind)):
             subs = dict([(d, ind[i].subs({dim: d})) for d in all_dims])
             deriv += coeffs[i] * expr.subs(subs)
-    return Differentiable(deriv.evalf(_PRECISION))
+    return deriv.evalf(_PRECISION)
 
 
 def cross_derivative(expr, **kwargs):
@@ -161,7 +161,7 @@ def cross_derivative(expr, **kwargs):
             var1 = expr.subs(subs1)
             var2 = expr.subs(subs2)
             deriv += .5 * (c11[i] * c12[j] * var1 + c21[-(j+1)] * c22[-(i+1)] * var2)
-    return Differentiable(-deriv.evalf(_PRECISION))
+    return -deriv.evalf(_PRECISION)
 
 
 def first_derivative(expr, **kwargs):
@@ -203,9 +203,10 @@ def first_derivative(expr, **kwargs):
                      tuple([i for i in expr.indices if i.root == dim])))
     # Loop through positions
     for i in range(0, len(ind)):
-            subs = dict([(d, ind[i].subs({dim: d})) for d in all_dims])
-            deriv += expr.subs(subs) * c[i]
-    return Differentiable(matvec._transpose*deriv.evalf(_PRECISION))
+        subs = dict([(d, ind[i].subs({dim: d})) for d in all_dims])
+        deriv += expr.subs(subs) * c[i]
+
+    return matvec._transpose*deriv.evalf(_PRECISION)
 
 
 def generic_derivative(expr, deriv_order, dim, fd_order, **kwargs):
@@ -233,7 +234,7 @@ def generic_derivative(expr, deriv_order, dim, fd_order, **kwargs):
             subs = dict([(d, indices[i].subs({dim: d})) for d in all_dims])
             deriv += expr.subs(subs) * c[i]
 
-    return Differentiable(deriv.evalf(_PRECISION))
+    return deriv.evalf(_PRECISION)
 
 
 def second_cross_derivative(expr, dims, order):
@@ -291,7 +292,7 @@ def staggered_diff(expr, deriv_order, dim, fd_order, stagger=centered):
     for i in range(0, len(idx)):
             deriv += expr.subs({dim: idx[i]}) * c[i]
 
-    return Differentiable(deriv.evalf(_PRECISION))
+    return deriv.evalf(_PRECISION)
 
 
 def staggered_cross_diff(expr, dims, deriv_order, fd_order, stagger):

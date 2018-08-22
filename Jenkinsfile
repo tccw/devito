@@ -152,6 +152,7 @@ def runExamples () {
     sh 'source activate devito ; python examples/seismic/tti/tti_example.py -a'
     sh 'source activate devito ; python examples/seismic/tti/tti_example.py -a --noazimuth'
     sh 'source activate devito ; python examples/seismic/elastic/elastic_example.py'
+    sh 'source activate devito ; python examples/seismic/elastic/elastic_example.py --2d'
     sh 'source activate devito ; py.test --nbval examples/cfd'
     sh 'source activate devito ; py.test --nbval examples/seismic/tutorials/0[1-3]*'
 }
