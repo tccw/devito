@@ -208,11 +208,11 @@ class FlowGraph(OrderedDict):
                 elif isinstance(i, Dimension):
                     # Go on with the search, as /i/ is not a time dimension
                     pass
-                elif isinstance(i, Indexed) and i.base.function.is_TensorFunction:
+                elif isinstance(i, Indexed) and not i.base.function.is_TensorFunction:
                     # It didn't come from the outside and it's not in self, so
                     # cannot determine if time-invariant; assume time-varying
                     return False
-                elif isinstance(i, IndexedData) and i.function.is_TensorFunction:
+                elif isinstance(i, IndexedData) and not i.function.is_TensorFunction:
                     # It didn't come from the outside and it's not in self, so
                     # cannot determine if time-invariant; assume time-varying
                     return False
