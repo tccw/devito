@@ -506,6 +506,7 @@ class TensorFunction(AbstractCachedFunction):
     def __neg__(self):
         return -1.0 * self
 
+
 class Function(TensorFunction):
     """A :class:`TensorFunction` providing operations to express
     finite-difference approximation. A ``Function`` encapsulates

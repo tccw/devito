@@ -5,7 +5,6 @@ from functools import partial
 from sympy import finite_diff_weights
 
 from devito.logger import error
-from devito.finite_differences.differentiable import Differentiable
 
 __all__ = ['first_derivative', 'second_derivative', 'cross_derivative',
            'generic_derivative', 'second_cross_derivative', 'generate_fd_functions',

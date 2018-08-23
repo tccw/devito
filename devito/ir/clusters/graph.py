@@ -3,7 +3,6 @@ from itertools import islice
 
 from cached_property import cached_property
 
-from devito.types import Indexed, IndexedData
 from devito.dimension import Dimension
 from devito.symbolics import (Eq, as_symbol, retrieve_indexed, retrieve_terminals,
                               convert_to_SSA, q_inc, q_indirect, q_timedimension)

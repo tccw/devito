@@ -227,7 +227,6 @@ class Differentiable(FrozenExpr):
     def __hash__(self):
         return hash(self.expr)
 
-
     @property
     def expr(self):
         return self._expr
