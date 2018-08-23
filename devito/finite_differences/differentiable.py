@@ -65,8 +65,7 @@ class Differentiable(FrozenExpr):
             return Differentiable(sympy.Add(*[self.expr, -other.expr], evaluate=False),
                                   fd=self.fd)
         else:
-            return Differentiable(sympy.Add(*[self.expr, -other], evaluate=False),
-                                  fd=self.fd)
+            return Differentiable(sympy.Add(*[self.expr, -other]), fd=self.fd)
 
     def __rsub__(self, other):
         if isinstance(other, Differentiable):
@@ -124,7 +123,9 @@ class Differentiable(FrozenExpr):
 
     def __eq__(self, other):
         if isinstance(other, Differentiable):
-            return sympy.simplify(self.expr) == other.expr
+            return self.expr.args == other.expr.args
+        elif isinstance(other, sympy.Expr):
+            return self.expr.args == other.args
         else:
             return sympy.simplify(self.expr) == other
 
