@@ -182,7 +182,7 @@ class CodePrinter(C99CodePrinter):
     def _print_Pow(self, expr):
         base, exp = expr.as_base_exp()
         if exp < 0:
-            return '1/' + pow_to_mul(base).__str__()
+            return '1.0/' + self._print(pow_to_mul(base))
         else:
             return '(' + self._print(pow_to_mul(expr)) + ')'
 

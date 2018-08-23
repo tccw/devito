@@ -94,10 +94,12 @@ def search(expr, query, mode='unique', visit='dfs', deep=False):
     """
     Interface to Search.
     """
+    from devito.finite_differences.differentiable import Differentiable
+    if isinstance(expr, Differentiable):
+        return search(expr.expr, query, mode=mode, visit=visit, deep=deep)
 
     assert mode in Search.modes, "Unknown mode"
     assert visit in ['dfs', 'bfs', 'bfs_first_hit'], "Unknown visit type"
-
     searcher = Search(query, mode, deep)
     if visit == 'dfs':
         return searcher.dfs(expr)

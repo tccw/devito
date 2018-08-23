@@ -503,6 +503,8 @@ class TensorFunction(AbstractCachedFunction):
     def __pow__(self, exponent):
         return Differentiable(sympy.Pow(self, exponent))
 
+    def __neg__(self):
+        return -1.0 * self
 
 class Function(TensorFunction):
     """A :class:`TensorFunction` providing operations to express

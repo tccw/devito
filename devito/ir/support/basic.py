@@ -630,7 +630,7 @@ class Scope(object):
         for i, e in enumerate(exprs):
             # reads
             for j in retrieve_terminals(e.rhs):
-                v = self.reads.setdefault(j.base.function, [])
+                v = self.reads.setdefault(j.function, [])
                 mode = 'R' if not q_inc(e) else 'RI'
                 v.append(TimedAccess(j, mode, i, e.ispace.directions))
             # write

@@ -15,6 +15,7 @@ class Differentiable(FrozenExpr):
     """
     _op_priority = 100.0
     is_Function = True
+    is_Indexed = False
 
     def __new__(cls, *args, **kwargs):
         return sympy.Expr.__new__(cls, *args)
@@ -101,10 +102,10 @@ class Differentiable(FrozenExpr):
 
     def __truediv__(self, other):
         if isinstance(other, Differentiable):
-            return Differentiable(self * sympy.Pow(other.expr, -1, evaluate=False),
+            return Differentiable(self.expr * sympy.Pow(other.expr, -1, evaluate=False),
                                   fd=self.fd)
         else:
-            return Differentiable(self * sympy.Pow(other, -1, evaluate=False),
+            return Differentiable(self.expr * sympy.Pow(other, -1, evaluate=False),
                                   fd=self.fd)
 
     def __rtruediv__(self, other):
@@ -116,7 +117,7 @@ class Differentiable(FrozenExpr):
                                   fd=self.fd)
 
     def __neg__(self):
-        return Differentiable(- self.expr, fd=self.fd)
+        return -1.0 * self
 
     def __pow__(self, exponent):
         return Differentiable(sympy.Pow(self, exponent, evaluate=False), fd=self.fd)
@@ -133,7 +134,11 @@ class Differentiable(FrozenExpr):
         return not self.__eq__(other)
 
     def func(self, *args, **kwargs):
-        return Differentiable(self.expr.func(*args, **kwargs), fd=self.fd)
+        kwargs.pop("evaluate", None)
+        if hasattr(self.expr, 'base'):
+            return self
+        else:
+            return Differentiable(self.expr.func(*args, **kwargs), fd=self.fd)
 
     def __str__(self):
         return self.expr.__str__()
@@ -142,7 +147,9 @@ class Differentiable(FrozenExpr):
 
     @property
     def args(self):
-        return self.expr.func(*self.expr.args).args
+        if hasattr(self.expr, 'base'):
+            return (self.expr,)
+        return self.expr.args
 
     @property
     def is_TimeFunction(self):

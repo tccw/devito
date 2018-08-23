@@ -108,6 +108,7 @@ def xreplace_constrained(exprs, make, rule=None, costmodel=lambda e: True, repea
                     unreplaced = [e for e in matching if not costmodel(e)]
                     rebuilt = expr.func(*(other + replaced + unreplaced), evaluate=False)
                     return rebuilt, False
+
             return expr.func(*other, evaluate=False), False
 
     # Process the provided expressions
@@ -224,6 +225,7 @@ def indexify(expr):
                 mapper[i] = i.indexify()
         except AttributeError:
             pass
+
     return expr.xreplace(mapper)
 
 
